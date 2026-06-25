@@ -1,0 +1,43 @@
+---
+import { css } from "../../styled-system/css";
+import { SITE } from "../config";
+import ThemeMenu from "./ThemeMenu.tsx";
+
+const links = [{ path: "/", text: "ホーム" }];
+---
+
+<header>
+  <div
+    class={css({
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      padding: "4",
+      backgroundColor: "primary",
+      color: "white",
+    })}
+  >
+    <a href="/">
+      <h1>{SITE.title}</h1>
+    </a>
+    <ThemeMenu client:load />
+  </div>
+  <nav
+    class={css({
+      display: "flex",
+      padding: "2",
+      backgroundColor: "muted",
+      color: "foreground",
+    })}
+  >
+    <ul>
+      {
+        links.map((link) => (
+          <li>
+            <a href={link.path}>{link.text}</a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+</header>

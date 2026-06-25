@@ -1,0 +1,17 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev
+    init: true
+    ports:
+      - "4321:4321"
+    # astro dev がホスト側のソース変更を検出できるよう bind mount
+    volumes:
+      - .:/workspace:cached
+      # コンテナ側 node_modules / styled-system をホストで上書きしない
+      - /workspace/node_modules
+      - /workspace/styled-system
+    environment:
+      - CHOKIDAR_USEPOLLING=1

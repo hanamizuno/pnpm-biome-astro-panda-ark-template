@@ -1,0 +1,38 @@
+---
+import { css } from "../../styled-system/css";
+import Base from "../layouts/Base.astro";
+---
+
+<Base
+  pageTitle="ページが見つかりません"
+  description="指定されたページは存在しないか、移動された可能性があります。"
+>
+  <div
+    class={css({
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      gap: "4",
+      padding: "8",
+      textAlign: "center",
+    })}
+  >
+    <h1 class={css({ fontSize: "4xl", fontWeight: "bold" })}>404</h1>
+    <p class={css({ fontSize: "lg", color: "mutedForeground" })}>
+      ページが見つかりませんでした。
+    </p>
+    <a
+      href="/"
+      class={css({
+        marginTop: "2",
+        padding: "2 4",
+        borderRadius: "md",
+        border: "1px solid",
+        borderColor: "border",
+        _hover: { backgroundColor: "muted" },
+      })}
+    >
+      トップに戻る
+    </a>
+  </div>
+</Base>

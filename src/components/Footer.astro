@@ -1,0 +1,17 @@
+---
+import { css } from "../../styled-system/css";
+import { SITE } from "../config";
+---
+
+<footer
+  class={css({
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    padding: "2rem 0",
+  })}
+>
+  <p class={css({ color: "gray.500", fontSize: "sm" })}>
+    Copyright © {SITE.author} All Rights Reserved.
+  </p>
+</footer>

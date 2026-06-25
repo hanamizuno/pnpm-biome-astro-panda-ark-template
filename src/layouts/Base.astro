@@ -1,0 +1,84 @@
+---
+import { css } from "../../styled-system/css";
+import Footer from "../components/Footer.astro";
+import Header from "../components/Header.astro";
+import { SITE } from "../config";
+import "../styles/global.css";
+
+export interface Props {
+  pageTitle?: string;
+  description?: string;
+}
+
+const { pageTitle, description } = Astro.props;
+const title = pageTitle ? `${pageTitle} | ${SITE.title}` : SITE.title;
+const pageDescription = description ?? SITE.description;
+const canonicalUrl = Astro.site
+  ? new URL(Astro.url.pathname, Astro.site).toString()
+  : Astro.url.toString();
+---
+
+<html lang={SITE.defaultLocale}>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="theme-color" content="#ffffff" />
+    <title>{title}</title>
+    <meta name="description" content={pageDescription} />
+    <link rel="canonical" href={canonicalUrl} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={pageDescription} />
+    <meta property="og:site_name" content={SITE.title} />
+
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={pageDescription} />
+
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title={SITE.rss.title}
+      href="/rss.xml"
+    />
+    <script is:inline>
+      // paint前に実行してフラッシュを防ぐため、src/utils/theme.ts と同じロジックを
+      // 意図的にインラインで保持している（変更時は両方を同期させること）
+      (function () {
+        const theme = localStorage.getItem("theme") || "system";
+        const resolved = theme === "system"
+          ? (window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light")
+          : theme;
+        const root = document.documentElement;
+        root.setAttribute("data-theme", resolved);
+        root.style.colorScheme = theme === "system" ? "light dark" : resolved;
+        const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+        if (metaThemeColor) {
+          metaThemeColor.setAttribute(
+            "content",
+            resolved === "dark" ? "#111827" : "#ffffff",
+          );
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <Header />
+    <div
+      class={css({
+        justifyContent: "center",
+        alignItems: "center",
+        padding: { base: "4", lg: "40" },
+      })}
+    >
+      <slot />
+    </div>
+    <Footer />
+  </body>
+</html>
