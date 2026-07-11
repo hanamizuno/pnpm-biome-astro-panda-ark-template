@@ -36,6 +36,11 @@
 - `package.json` の `packageManager` を pnpm 11.9.0 にハッシュ付きで固定、`@types/node` を engines（`>=24`）に合わせて `^24` に変更
 - TypeScript 7（Go 製ネイティブコンパイラ）への更新を検証したが見送り: `@astrojs/check 0.9`（`@astrojs/language-server` 2.x）の peer 制約が `^5 || ^6` で、TS7 では `astro check` が `Cannot read properties of undefined (reading 'fileExists')` でクラッシュする。Astro 言語ツールが TS7 対応した時点で再検討（`typescript` は `^5.9.3` を維持）
 
+### Fixed
+
+- `pnpm audit` の high 検出 3 件（`@pandacss/studio` 配下の `astro@6.2.2` の XSS / SSRF、`vite@7.3.2` の `server.fs.deny` バイパス）を解消: studio 配下の `astro` を `^6.4.6`、`vite` を `^7.3.5` に強制解決
+- 依存の強制解決を `pnpm-workspace.yaml` の `overrides` に移動: `package.json` のトップレベル `overrides` フィールドは pnpm に読まれておらず（lockfile に反映されない）、従来の指定は実質 no-op だった。pnpm 11 は `pnpm` フィールドも読まないため、`pnpm-workspace.yaml` がセレクタ形式（`親>子`）の overrides の正しい置き場所
+
 ## 0.0.0 - 2026-06-26
 
 ### Added

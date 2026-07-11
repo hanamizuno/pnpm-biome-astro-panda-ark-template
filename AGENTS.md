@@ -102,9 +102,9 @@ pnpm update                     # 依存更新
 ├── dist/                        # ビルド成果物 (git 管理外)
 ├── docs/
 │   └── knowledge/               # OKF v0.1 知識バンドル（architecture / adr / conventions / runbooks / research）
-├── package.json                 # スクリプト / 依存 / overrides
+├── package.json                 # スクリプト / 依存
 ├── pnpm-lock.yaml
-├── pnpm-workspace.yaml          # allowBuilds (esbuild, sharp)
+├── pnpm-workspace.yaml          # allowBuilds (esbuild, sharp) / overrides (依存の強制解決)
 ├── tsconfig.json                # astro/tsconfigs/strict を extends
 ├── biome.json                   # Biome 設定 (`.astro` / styled-system は除外)
 ├── astro.config.mjs             # Astro 設定 (mdx / sitemap / react / remark/rehype)

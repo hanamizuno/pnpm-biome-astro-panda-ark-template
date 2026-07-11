@@ -52,14 +52,5 @@
     "sharp": "^0.34.5",
     "typescript": "^5.9.3",
     "vitest": "^3.0.0"
-  },
-  "overrides": {
-    "fast-xml-parser": "^5.5.7",
-    "anymatch": {
-      "picomatch": "^2.3.2"
-    },
-    "@pandacss/studio": {
-      "vite": "^7.3.2"
-    }
   }
 }

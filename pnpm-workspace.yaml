@@ -1,3 +1,15 @@
 allowBuilds:
   esbuild: true
   sharp: true
+
+# 依存の強制解決（pnpm 11 では package.json ではなくここに書く）。
+# @pandacss/studio (dev ツール) が古い astro / vite を固定しているため、
+# 脆弱性修正済みバージョンへ引き上げる（audit の high 検出対応）。
+overrides:
+  fast-xml-parser: ^5.5.7
+  anymatch>picomatch: ^2.3.2
+  "@pandacss/studio>vite": ^7.3.5
+  "@astrojs/react@5>vite": ^7.3.5
+  astro@6>vite: ^7.3.5
+  "@pandacss/studio>astro": ^6.4.6
+  "@pandacss/astro-plugin-studio>astro": ^6.4.6
