@@ -1,10 +1,14 @@
+# NodeSource セットアップ（devcontainer ステージ）用。FROM のバージョンは digest が固定する
 ARG NODE_VERSION=24
-ARG DEBIAN_VERSION=bookworm
 
 # ===== Stage 1: base (corepack + pnpm) =====
-FROM node:${NODE_VERSION}-slim AS base
+# ベースイメージは digest 固定（Dependabot の docker エコシステムが追跡・更新する）
+FROM node:24-slim@sha256:b31e7a42fdf8b8aa5f5ed477c72d694301273f1069c5a2f71d53c6482e99a2fc AS base
 
-RUN corepack enable && corepack prepare pnpm@11 --activate
+# corepack キャッシュを全ユーザーが読める場所に固定（root でビルドしても
+# 非 root ユーザー（node）が pnpm を再ダウンロードせずに使えるように）
+ENV COREPACK_HOME=/opt/corepack
+RUN corepack enable && corepack prepare pnpm@11.9.0 --activate && chmod -R a+rX /opt/corepack
 WORKDIR /app
 
 # ===== Stage 2: development (compose.dev.yml で使用) =====
@@ -51,20 +55,27 @@ ENTRYPOINT []
 CMD ["pnpm", "preview", "--", "--host", "0.0.0.0", "--port", "4321"]
 
 # ===== Stage 5: devcontainer =====
-FROM mcr.microsoft.com/vscode/devcontainers/base:${DEBIAN_VERSION} AS devcontainer
+FROM mcr.microsoft.com/vscode/devcontainers/base:bookworm@sha256:bb7b81b6e5be17b5267f92f4ffda534fea37dab1df97b5e86c1f9b91da5c0b5d AS devcontainer
 
 ARG NODE_VERSION
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+# corepack キャッシュを全ユーザーが読める場所に固定（root でビルドしても
+# vscode ユーザーが post-create で pnpm を再ダウンロードせずに使えるように）
+ENV COREPACK_HOME=/opt/corepack
+# hadolint ignore=DL3008
 RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && corepack enable \
-    && corepack prepare pnpm@11 --activate
+    && corepack prepare pnpm@11.9.0 --activate \
+    && chmod -R a+rX /opt/corepack
 
 # chrome-devtools-mcp 用の headless Chromium と描画フォント（日本語含む）。
 # コンテナ内ではカーネルサンドボックスを利用できないため --no-sandbox を付与する
 # ラッパーを用意し、MCP からは executablePath でこれを指定する
 # （--disable-dev-shm-usage は /dev/shm が小さい Docker 環境でのクラッシュ対策）。
+# hadolint ignore=DL3008
 RUN apt-get update \
     && apt-get install -y --no-install-recommends chromium fonts-noto-cjk fonts-liberation \
     && apt-get clean \
