@@ -8,7 +8,7 @@ This file provides guidance to AI coding agents when working with code in this r
 pnpm + Biome + Astro + Panda CSS + Ark UI ベースのテンプレートプロジェクトです。
 Astro 7 による静的サイト生成、Panda CSS 1.10 による型安全スタイリング、Ark UI 5 + React 19 によるヘッドレスコンポーネント (Islands)、Biome 2 による高速フォーマット/リント、vitest による単体テストを標準構成としています。
 
-コンテナ構成: `Dockerfile`（マルチステージ: `dev` / `builder` / `prod` / `devcontainer`）、`compose.dev.yml`（開発）、`compose.yml`（本番、`astro preview` で `dist/` を配信）。Dev Container（`.devcontainer/devcontainer.json`）は AI エージェント CLI（Claude Code / Codex / GitHub CLI）を Dev Container Features と post-create フック経由で重ねて注入する実行環境も兼ねます。見た目のデバッグ用に headless Chromium + Chrome DevTools MCP（`chrome-devtools-mcp`）も同梱しており、エージェントが Astro 開発サーバー（http://localhost:4321）の画面をスクリーンショット等で確認できます。さらにホスト設定 — グローバル gitignore、git identity（user.name / user.email）、Claude Code の settings / statusline — も継承します（`.devcontainer/initialize.sh` がステージングし、`.devcontainer/post-start.sh` がコンテナ内へ反映）。
+コンテナ構成: `Dockerfile`（マルチステージ: `dev` / `builder` / `prod` / `devcontainer`）、`compose.dev.yml`（開発）、`compose.yml`（本番、`astro preview` で `dist/` を配信）。Dev Container（`.devcontainer/devcontainer.json`）は AI エージェント CLI（Claude Code / Codex / GitHub CLI）を Dev Container Features と post-create フック経由で重ねて注入する実行環境も兼ねます。見た目のデバッグ用に headless Chromium + Chrome DevTools MCP（`chrome-devtools-mcp`）も同梱しており、エージェントが Astro 開発サーバー（http://localhost:4321）の画面をスクリーンショット等で確認できます。さらにホスト設定 — グローバル gitignore、git identity（user.name / user.email）、Claude Code の settings / statusline — も継承します（`.devcontainer/initialize.sh` がステージングし、`.devcontainer/post-start.sh` がコンテナ内へ反映）。`node_modules` と pnpm ストアは named volume でホストの bind mount から分離しています（プラットフォーム固有バイナリの混在による再インストールループ防止。詳細は `.devcontainer/README.md`）。
 
 ## 重要な前提
 
@@ -100,6 +100,8 @@ pnpm update                     # 依存更新
 ├── styled-system/               # Panda codegen 出力 (git 管理外)
 ├── .astro/                      # Astro 型生成出力 (git 管理外)
 ├── dist/                        # ビルド成果物 (git 管理外)
+├── docs/
+│   └── knowledge/               # OKF v0.1 知識バンドル（architecture / adr / conventions / runbooks / research）
 ├── package.json                 # スクリプト / 依存 / overrides
 ├── pnpm-lock.yaml
 ├── pnpm-workspace.yaml          # allowBuilds (esbuild, sharp)
@@ -115,36 +117,43 @@ pnpm update                     # 依存更新
 ├── LICENSE                      # MIT
 ├── README.md
 ├── .editorconfig
+├── .gitattributes               # 改行コードを LF に統一
+├── .vscode/                     # エディタ設定 (Biome / EditorConfig / Astro 拡張の推奨)
 ├── .npmrc                       # pnpm 挙動設定 (engine-strict 等)
 ├── .nvmrc                       # Node.js バージョン固定
 ├── .pre-commit-config.yaml      # biome / astro check / secretlint
 ├── .secretlintrc.json
 ├── .secretlintignore
-├── .zizmor.yml                  # GitHub Actions セキュリティ設定 (ref-pin)
+├── .zizmor.yml                  # GitHub Actions セキュリティ設定 (全アクション hash-pin 強制)
 ├── Dockerfile                   # マルチステージ (dev / builder / prod / devcontainer)
 ├── compose.yml                  # 本番 (target: prod, 4321)
 ├── compose.dev.yml              # 開発 (target: dev, bind mount, 4321)
 ├── .devcontainer/
-│   ├── devcontainer.json        # Dev Container 設定 (Astro 拡張 + Biome 拡張)
+│   ├── devcontainer.json        # Dev Container 設定 (Astro 拡張 + Biome 拡張。node_modules は volume でホストと分離)
 │   ├── initialize.sh            # ホスト側ステージング (gitignore / git identity / Claude 設定)
-│   ├── post-create.sh           # 初回構築 (pnpm install / Codex / Chrome DevTools MCP)
+│   ├── post-create.sh           # 初回構築 (pnpm ストア設定 / pnpm install / Codex / Chrome DevTools MCP)
 │   ├── post-start.sh            # 起動時にホスト設定を反映
-│   └── codex-config.toml        # Codex CLI 初期設定
+│   ├── codex-config.toml        # Codex CLI 初期設定
+│   └── README.md                # エージェント実行環境の詳細 (認証 / 隔離範囲 / PAT 運用)
 └── .github/
-    ├── dependabot.yml
+    ├── dependabot.yml           # GitHub Actions / docker / devcontainers を週次更新 (cooldown 7 日)
     ├── CODEOWNERS               # @REPLACE-ME (派生先で要置換)
     ├── PULL_REQUEST_TEMPLATE.md
-    ├── labels.yml
+    ├── labels.yml               # ラベル定義 (dependencies / meta 含む)
+    ├── labeler.yml              # ハーネス変更 PR に meta ラベルを付けるパス定義
     ├── copilot-instructions.md
-    ├── ISSUE_TEMPLATE/
+    ├── ISSUE_TEMPLATE/          # issue forms (bug / enhancement / task)
     ├── scripts/sync-labels.sh
     └── workflows/
         ├── lint.yml             # biome ci + astro check + secretlint
         ├── test.yml             # Node 24/25 マトリクス + vitest + astro build
         ├── lint_gha.yml         # GitHub Actions 自体のリント (actionlint + zizmor)
-        ├── security.yml         # 依存関係のセキュリティ監査 (毎日)
+        ├── lint_docker.yml      # Dockerfile のリント (hadolint)
+        ├── security.yml         # 依存関係のセキュリティ監査 + Trivy (毎日)
+        ├── sbom.yml             # CycloneDX SBOM 生成 (cdxgen)
         ├── deps-update.yml      # 依存関係の自動更新 (毎週月曜)
         ├── labels.yml           # ラベル同期
+        ├── label_pr.yml         # PR 自動ラベリング (actions/labeler)
         └── copilot-setup-steps.yml
 ```
 
@@ -187,11 +196,17 @@ pnpm update                     # 依存更新
 継続的インテグレーション：
 
 - **lint.yml**: プッシュ/PR 時のコード品質チェック（`biome ci .` + `astro check` + `secretlint`）
-- **test.yml**: プッシュ/PR 時のテスト実行とカバレッジ計測（PR にカバレッジレポートをコメント） + `astro build` のスモークテスト
-- **lint_gha.yml**: Actions 自体のセキュリティチェック（actionlint + zizmor、ref-pin 強制）
-- **security.yml**: `pnpm audit` を毎日実行
-- **deps-update.yml**: `pnpm update` を毎週月曜実行、PR を自動作成
+- **test.yml**: プッシュ/PR 時のテスト実行とカバレッジ計測（PR にカバレッジレポートをコメント。fork PR はスキップ） + `astro build` のスモークテスト
+- **lint_gha.yml**: Actions 自体のリント（actionlint + zizmor、全アクション hash-pin 強制）
+- **lint_docker.yml**: Dockerfile のリント（hadolint）
+- **security.yml**: `pnpm audit` + Trivy fs スキャンを毎日実行（push / cron 時は SARIF を Security タブへ集約）
+- **sbom.yml**: CycloneDX SBOM を生成して artifact にアップロード（cdxgen）
+- **deps-update.yml**: `pnpm update` を毎週月曜実行、`pnpm release-check` 通過後に PR を自動作成
+- **labels.yml**: `.github/labels.yml` のラベル定義をリポジトリへ同期
+- **label_pr.yml**: `.github/labeler.yml` のパス定義に基づき、開発ハーネス変更 PR に `meta` ラベルを自動付与
 - **copilot-setup-steps.yml**: GitHub Copilot 用の環境セットアップ
+
+すべてのワークフローはトップレベル `permissions: {}` + ジョブ単位の最小権限で運用し、アクションは commit SHA（docker は digest）で固定しています（`.zizmor.yml` の `hash-pin` ポリシーで強制）。
 
 ### 技術選択
 
