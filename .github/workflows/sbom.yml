@@ -1,26 +1,21 @@
-name: "Copilot Setup Steps"
-
-# GitHub Copilot 用環境セットアップの妥当性確認。
-# 実際に Copilot が参照する手順とほぼ同等のステップを走らせ、
-# install / lint / typecheck / test が緑になることを保証する。
+name: Generate SBOM
 
 on:
-  workflow_dispatch:
   push:
+    branches: [main]
     paths:
-      - .github/workflows/copilot-setup-steps.yml
-  pull_request:
-    paths:
-      - .github/workflows/copilot-setup-steps.yml
+      - "package.json"
+      - "pnpm-lock.yaml"
+  workflow_dispatch:
 
 permissions: {}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  cancel-in-progress: false
 
 jobs:
-  setup:
+  sbom:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -44,5 +39,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Smoke check (lint + typecheck + test)
-        run: pnpm release-check
+      - name: Generate SBOM (CycloneDX)
+        # cdxgen は pnpm-lock.yaml を解析して CycloneDX SBOM を生成する。再現性のためバージョン固定
+        run: pnpm dlx @cyclonedx/cdxgen@12.7.0 -t pnpm -o sbom.cdx.json .
+
+      - name: Upload SBOM
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: sbom
+          path: sbom.cdx.json
